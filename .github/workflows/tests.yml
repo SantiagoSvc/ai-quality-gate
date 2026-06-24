@@ -1,0 +1,44 @@
+# Nombre del pipeline, aparece en GitHub
+name: AI Quality Gate - Automated Tests
+
+# ¿Cuándo se ejecuta?
+# En cada push o pull request a la rama main
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    # El pipeline corre en una máquina virtual Ubuntu en la nube
+    runs-on: ubuntu-latest
+
+    steps:
+      # Paso 1: Descargar el código del repositorio
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Paso 2: Instalar Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Paso 3: Instalar dependencias
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Paso 4: Entrenar el modelo
+      # Necesario porque el archivo .pkl no está en GitHub
+      - name: Train model
+        run: python src/model.py
+
+      # Paso 5: Correr todas las pruebas
+      - name: Run all tests
+        run: python -m pytest tests/ -v
+
+      # Paso 6: Mostrar resumen si algo falla
+      - name: Test summary
+        if: always()
+        run: python -m pytest tests/ --tb=short
